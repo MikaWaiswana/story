@@ -37,10 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('stories/my-stories', [StoryController::class, 'myStories']); // Rute baru untuk myStories
     // Rute untuk bookmark
     Route::resource('bookmarks', BookmarkController::class);
+    Route::delete('images/delete', [StoryController::class, 'deleteImages']);
 });
 
 // Rute untuk mendapatkan cerita dengan opsi pengurutan  
-Route::get('stories', [StoryController::class, 'index']);  
+Route::get('stories', [StoryController::class, 'index']);
 // Rute untuk mendapatkan cerita berdasarkan ID
 Route::get('stories/{id}', [StoryController::class, 'show']);
 // Rute untuk mendapatkan cerita berdasarkan kategori ID
@@ -59,4 +60,4 @@ Route::get('az', [StoryController::class, 'getStoriesAZ']);
 Route::get('za', [StoryController::class, 'getStoriesZA']);
 
 // Rute untuk kategori
-Route::resource('categories', CategoryController::class);
+Route::apiResource('categories', CategoryController::class);

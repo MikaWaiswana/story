@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class BookmarkController extends Controller
 {
-    // Menampilkan semua bookmark pengguna
+    // Menampilkan semua bookmark pengguna beserta data pengguna pembuat cerita
     public function index()
     {
-        $bookmarks = Bookmark::with(['story'])->where('user_id', Auth::id())->get();
+        // Mengambil semua bookmark pengguna beserta data cerita dan pengguna pembuat cerita
+        $bookmarks = Bookmark::with(['story.user'])->where('user_id', Auth::id())->get();
+
+        // Mengembalikan respons JSON yang mencakup pesan dan data bookmark
         return response()->json([
             'message' => 'Bookmark berhasil diambil.',
             'data' => $bookmarks

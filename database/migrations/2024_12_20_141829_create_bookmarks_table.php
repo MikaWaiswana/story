@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('bookmarks', function (Blueprint $table) {
             $table->id(); // Kolom id
-            
+
             $table->unsignedBigInteger('user_id'); // Kolom user_id
             $table->unsignedBigInteger('story_id'); // Kolom story_id
-            
+
             $table->timestamps(); // Kolom created_at dan updated_at
 
             // Mendefinisikan foreign key

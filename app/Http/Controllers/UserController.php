@@ -85,7 +85,7 @@ class UserController extends Controller
             ]
         ]);
     }
-    
+
     public function logout(Request $request)
     {
         if ($request->user()) {
@@ -129,50 +129,50 @@ class UserController extends Controller
             ]
         ]);
     }
-    
-    public function updateImage(Request $request)  
-    {  
-        $validator = Validator::make($request->all(), [  
-            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',  
-        ]);  
-    
-        if ($validator->fails()) {  
-            return response()->json([  
-                "data" => [  
-                    "errors" => $validator->errors()  
-                ]  
-            ], 422);  
-        }  
-    
-        $user = $request->user();  
-    
+
+    public function updateImage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "data" => [
+                    "errors" => $validator->errors()
+                ]
+            ], 422);
+        }
+
+        $user = $request->user();
+
         // Delete old image if it exists  
-        if ($user->image) {  
+        if ($user->image) {
             // Ensure the path is correct and delete the old image  
-            Storage::disk('public')->delete($user->image);  
-        }  
-    
+            Storage::disk('public')->delete($user->image);
+        }
+
         // Get the original filename  
-        $originalFilename = $request->file('image')->getClientOriginalName();  
-    
+        $originalFilename = $request->file('image')->getClientOriginalName();
+
         // Store new image in the "public/profile_images" folder with the original filename  
-        $path = $request->file('image')->storeAs('profile_images', $originalFilename, 'public');  
-    
+        $path = $request->file('image')->storeAs('profile_images', $originalFilename, 'public');
+
         // Create full URL with the application's base URL for response  
-        $fullImageUrl = url('storage/' . $path);  
-    
+        $fullImageUrl = url('storage/' . $path);
+
         // Update user's image path with the relative path  
-        $user->update([  
+        $user->update([
             'image' => $path, // Save the relative path in the database  
-        ]);  
-    
-        return response()->json([  
-            "data" => [  
-                "user" => $user,  
+        ]);
+
+        return response()->json([
+            "data" => [
+                "user" => $user,
                 "image_url" => $fullImageUrl, // URL to access the image  
-                "message" => "Profile image updated successfully"  
-            ]  
-        ]);  
+                "message" => "Profile image updated successfully"
+            ]
+        ]);
     }
 
     // Change password
