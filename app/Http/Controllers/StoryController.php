@@ -18,7 +18,7 @@ class StoryController extends Controller
     {
         // Mengambil parameter pencarian dari query string (opsional)
         $search = $request->input('search');
-    
+
         // Membangun query untuk mengambil cerita dengan pencarian dan pagination
         $stories = Story::with(['user', 'category', 'content_images'])
             ->when($search, function ($query, $search) {
@@ -29,20 +29,20 @@ class StoryController extends Controller
                     });
             })
             ->paginate(12); // Pagination 12 cerita per halaman
-    
+
         // Jika tidak ada cerita yang ditemukan setelah pencarian
         if ($stories->isEmpty()) {
             return response()->json([
                 'message' => 'Tidak ada cerita yang ditemukan.'
             ], 404);
         }
-    
+
         return response()->json([
             'message' => 'Cerita berhasil ditemukan.',
             'data' => $stories
         ], 200);
     }
-    
+
 
 
     // Menyimpan cerita baru  
@@ -133,16 +133,16 @@ class StoryController extends Controller
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:content_images,id', // Validasi ID gambar yang akan dihapus
         ]);
-    
+
         try {
             $story = Story::findOrFail($id);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Cerita tidak ditemukan.'], 404);
         }
-    
+
         // Menghitung jumlah gambar yang ada setelah penghapusan
         $existingImagesCount = $story->content_images()->count();
-    
+
         // Menghapus gambar yang dipilih berdasarkan ID
         if ($request->has('delete_images')) {
             foreach ($request->input('delete_images') as $imageId) {
@@ -154,34 +154,34 @@ class StoryController extends Controller
                 }
             }
         }
-    
+
         // Validasi jumlah gambar setelah penghapusan
         $newImagesCount = $request->has('content_images') ? count($request->file('content_images')) : 0;
         if ($existingImagesCount + $newImagesCount > 5) {
             return response()->json(['message' => 'Jumlah gambar tidak boleh lebih dari 5.'], 400);
         }
-    
+
         // Memperbarui cerita
         $story->update($request->only(['category_id', 'title', 'content']));
-    
+
         // Menyimpan gambar baru jika ada    
         if ($request->hasFile('content_images')) {
             foreach ($request->file('content_images') as $image) {
                 // Mengambil nama asli file  
                 $originalName = $image->getClientOriginalName();
-    
+
                 // Menyimpan gambar dengan nama asli di folder 'images'  
                 $path = $image->storeAs('content_images', $originalName, 'public');
-    
+
                 $story->content_images()->create(['path' => $path]);
             }
         }
-    
+
         return response()->json([
             'message' => 'Cerita berhasil diperbarui.',
             'data' => $story->load('content_images')
         ], 200);
-    }    
+    }
 
 
     // Menghapus cerita  
@@ -209,27 +209,27 @@ class StoryController extends Controller
             'image_ids' => 'required|array',
             'image_ids.*' => 'exists:content_images,id', // Pastikan setiap ID ada di tabel content_images
         ]);
-    
+
         // Menghapus gambar berdasarkan ID yang diberikan
         foreach ($request->input('image_ids') as $imageId) {
             $contentImage = ContentImage::findOrFail($imageId);
-    
+
             // Hapus file dari storage
             Storage::disk('public')->delete($contentImage->path);
             $contentImage->delete();
         }
-    
+
         return response()->json([
             'message' => 'Gambar berhasil dihapus.'
         ], 204);
     }
-    
+
 
     // Menampilkan cerita berdasarkan kategori ID
     public function getByCategoryId($categoryId)
     {
         // Mengambil semua cerita yang sesuai dengan kategori ID
-        $stories = Story::with(['user', 'content_images'])
+        $stories = Story::with(['user', 'category', 'content_images']) // Menambahkan relasi category
             ->where('category_id', $categoryId)
             ->get();
 
@@ -245,6 +245,7 @@ class StoryController extends Controller
             'data' => $stories
         ], 200);
     }
+
 
     // Menampilkan cerita milik pengguna yang sedang login
     public function myStories()
@@ -274,6 +275,26 @@ class StoryController extends Controller
         ], 200);
     }
 
+    public function getLatestStories()
+    {
+        // Mengambil cerita terbaru berdasarkan waktu pembuatan dengan pagination
+        $stories = Story::with(['user', 'category', 'content_images'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(6);
+
+        // Jika tidak ada cerita dalam database
+        if ($stories->isEmpty()) {
+            return response()->json([
+                'message' => 'Belum ada cerita yang tersedia.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Cerita terbaru berhasil ditemukan.',
+            'data' => $stories
+        ], 200);
+    }
+
     // Mendapatkan cerita terbaru
     public function getNewestStory()
     {
@@ -292,26 +313,6 @@ class StoryController extends Controller
         return response()->json([
             'message' => 'Cerita terbaru berhasil ditemukan.',
             'data' => $newestStory
-        ], 200);
-    }
-
-    public function getLatestStories()
-    {
-        // Mengambil cerita terbaru berdasarkan waktu pembuatan dengan pagination
-        $stories = Story::with(['user', 'category', 'content_images'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(6);
-
-        // Jika tidak ada cerita dalam database
-        if ($stories->isEmpty()) {
-            return response()->json([
-                'message' => 'Belum ada cerita yang tersedia.'
-            ], 404);
-        }
-
-        return response()->json([
-            'message' => 'Cerita terbaru berhasil ditemukan.',
-            'data' => $stories
         ], 200);
     }
 
