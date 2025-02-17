@@ -12,15 +12,17 @@ class BookmarkController extends Controller
     // Menampilkan semua bookmark pengguna beserta data pengguna pembuat cerita
     public function index()
     {
-        // Mengambil semua bookmark pengguna beserta data cerita dan pengguna pembuat cerita
-        $bookmarks = Bookmark::with(['story.user'])->where('user_id', Auth::id())->get();
-
+        // Mengambil semua bookmark pengguna beserta data cerita, pengguna pembuat cerita, dan kategori
+        $bookmarks = Bookmark::with(['story.user', 'story.category', 'story.content_images'])->where('user_id', Auth::id())->get();
+    
         // Mengembalikan respons JSON yang mencakup pesan dan data bookmark
         return response()->json([
             'message' => 'Bookmark berhasil diambil.',
             'data' => $bookmarks
         ]);
     }
+    
+    
 
     // Menyimpan bookmark baru
     public function store(Request $request)

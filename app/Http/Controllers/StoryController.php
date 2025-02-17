@@ -226,25 +226,32 @@ class StoryController extends Controller
 
 
     // Menampilkan cerita berdasarkan kategori ID
-    public function getByCategoryId($categoryId)
+    public function getByCategoryId($categoryId, $itemsPerPage = 12)
     {
-        // Mengambil semua cerita yang sesuai dengan kategori ID
+        // Mengambil cerita yang sesuai dengan kategori ID dengan paginasi
         $stories = Story::with(['user', 'category', 'content_images']) // Menambahkan relasi category
             ->where('category_id', $categoryId)
-            ->get();
-
+            ->paginate($itemsPerPage);
+    
         // Memeriksa apakah cerita ditemukan
         if ($stories->isEmpty()) {
             return response()->json([
                 'message' => 'Tidak ada cerita yang ditemukan untuk kategori ini.',
             ], 404);
         }
-
+    
         return response()->json([
             'message' => 'Cerita berhasil ditemukan.',
-            'data' => $stories
+            'data' => $stories->items(),
+            'pagination' => [
+                'current_page' => $stories->currentPage(),
+                'total_pages' => $stories->lastPage(),
+                'total_items' => $stories->total(),
+                'per_page' => $stories->perPage(),
+            ]
         ], 200);
     }
+    
 
 
     // Menampilkan cerita milik pengguna yang sedang login

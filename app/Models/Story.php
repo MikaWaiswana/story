@@ -26,7 +26,7 @@ class Story extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function bookmarks()
+    public function bookmark()
     {
         return $this->hasMany(Bookmark::class);
     }
