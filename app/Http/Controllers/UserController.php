@@ -23,7 +23,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 "data" => [
-                    "errors" => $validator->errors() // Perbaikan di sini
+                    "errors" => $validator->errors()
                 ]
             ], 422);
         }
@@ -36,13 +36,20 @@ class UserController extends Controller
         ]);
 
         $token = $user->createToken("tokenName")->plainTextToken;
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+60 minutes')); // Set expiration time to 60 minutes from now
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+60 minutes'));
+        $ngrokUrl = env('NGROK_URL');
+        $imageUrl = $ngrokUrl . '/storage/' . $user->image;
 
         return response()->json([
             "data" => [
-                "user" => $user,
+                "id" => $user->id,
+                "name" => $user->name,
+                "username" => $user->username,
+                "email" => $user->email,
+                "image" => $imageUrl,
+                "about" => $user->about,
                 "token" => $token,
-                "expires_at" => $expiresAt, // Add expiration time to response
+                "expires_at" => $expiresAt,
                 "message" => "Register Success"
             ]
         ]);
@@ -57,9 +64,7 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                "data" => [
-                    "errors" => $validator->errors() // Perbaikan di sini
-                ]
+                "errors" => $validator->errors()
             ], 422);
         }
 
@@ -74,15 +79,20 @@ class UserController extends Controller
         }
 
         $token = $user->createToken("tokenName")->plainTextToken;
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+60 minutes')); // Set expiration time to 60 minutes from now
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+60 minutes'));
+        $ngrokUrl = env('NGROK_URL');
+        $imageUrl = $ngrokUrl . '/storage/' . $user->image;
 
         return response()->json([
-            "data" => [
-                "user" => $user,
-                "token" => $token,
-                "expires_at" => $expiresAt, // Add expiration time to response
-                "message" => "Login Success"
-            ]
+            "id" => $user->id,
+            "name" => $user->name,
+            "username" => $user->username,
+            "email" => $user->email,
+            "image" => $imageUrl, // Menggunakan URL gambar yang telah dibentuk
+            "about" => $user->about,
+            "token" => $token,
+            "expires_at" => $expiresAt,
+            "message" => "Login Success"
         ]);
     }
 
@@ -97,7 +107,7 @@ class UserController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401); // Tambahkan pengecekan
+        return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     public function updateProfile(Request $request)
@@ -111,7 +121,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 "data" => [
-                    "errors" => $validator->errors() // Perbaikan di sini
+                    "errors" => $validator->errors()
                 ]
             ], 422);
         }
@@ -121,12 +131,18 @@ class UserController extends Controller
             'name' => $request->name,
             'about' => $request->about,
         ]);
+        $ngrokUrl = env('NGROK_URL');
+
+        $imageUrl = $ngrokUrl . '/storage/' . $user->image;
 
         return response()->json([
-            "data" => [
-                "user" => $user,
-                "message" => "Profile updated successfully"
-            ]
+            "id" => $user->id,
+            "name" => $user->name,
+            "username" => $user->username,
+            "email" => $user->email,
+            "image" => $imageUrl,
+            "about" => $user->about,
+            "message" => "Profile updated successfully"
         ]);
     }
 
@@ -146,36 +162,33 @@ class UserController extends Controller
 
         $user = $request->user();
 
-        // Delete old image if it exists  
         if ($user->image) {
-            // Ensure the path is correct and delete the old image  
             Storage::disk('public')->delete($user->image);
         }
 
-        // Get the original filename  
         $originalFilename = $request->file('image')->getClientOriginalName();
 
-        // Store new image in the "public/profile_images" folder with the original filename  
         $path = $request->file('image')->storeAs('profile_images', $originalFilename, 'public');
-
-        // Create full URL with the application's base URL for response  
-        $fullImageUrl = url('storage/' . $path);
-
-        // Update user's image path with the relative path  
+  
         $user->update([
-            'image' => $path, // Save the relative path in the database  
+            'image' => $path,
         ]);
 
+        $ngrokUrl = env('NGROK_URL');
+
+        $imageUrl = $ngrokUrl . '/storage/' . $user->image;
+
         return response()->json([
-            "data" => [
-                "user" => $user,
-                "image_url" => $fullImageUrl, // URL to access the image  
-                "message" => "Profile image updated successfully"
-            ]
+            "id" => $user->id,
+            "name" => $user->name,
+            "username" => $user->username,
+            "email" => $user->email,
+            "image" => $imageUrl,
+            "about" => $user->about,
+            "message" => "Profile image updated successfully"
         ]);
     }
 
-    // Change password
     public function changePassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -187,7 +200,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 "data" => [
-                    "errors" => $validator->errors() // Perbaikan di sini
+                    "errors" => $validator->errors()
                 ]
             ], 422);
         }
@@ -213,8 +226,8 @@ class UserController extends Controller
 
     public function getUserById($id)
     {
-        $user = User::findOrFail($id); // Menggunakan findOrFail
-
+        $user = User::findOrFail($id);
+        
         return response()->json($user, 200);
     }
 }

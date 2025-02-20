@@ -23,7 +23,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Fantasy'],
             ['name' => 'Drama'],
             ['name' => 'Heartfelt'],
-            ['name' => 'Mystery'],
+            ['name' => 'Mistery'],
         ];
 
         foreach ($categories as $category) {

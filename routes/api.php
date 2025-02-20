@@ -21,11 +21,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
+// Rute untuk user
 Route::post('login', [UserController::class, 'login']);
 Route::post('register', [UserController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Rute untuk user
     Route::post('logout', [UserController::class, 'logout']);
     Route::put('update-profile', [UserController::class, 'updateProfile']);
     Route::post('update-image', [UserController::class, 'updateImage']);
@@ -34,10 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute untuk cerita
     Route::apiResource('stories', StoryController::class)->except('index', 'show');
-    Route::get('stories/my-stories', [StoryController::class, 'myStories']); // Rute baru untuk myStories
-    // Rute untuk bookmark
-    Route::resource('bookmarks', BookmarkController::class);
+    Route::get('stories/my-stories', [StoryController::class, 'myStories']);
     Route::delete('images/delete', [StoryController::class, 'deleteImages']);
+    // Rute untuk bookmark
+    Route::apiResource('bookmarks', BookmarkController::class);
 });
 
 // Rute untuk mendapatkan cerita dengan opsi pengurutan  

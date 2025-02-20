@@ -133,16 +133,21 @@ class StoryController extends Controller
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:content_images,id', // Validasi ID gambar yang akan dihapus
         ]);
-
+    
         try {
             $story = Story::findOrFail($id);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Cerita tidak ditemukan.'], 404);
         }
-
+    
+        // Periksa apakah user yang sedang login adalah pemilik cerita
+        if ($story->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Anda tidak memiliki izin untuk memperbarui cerita ini.'], 403);
+        }
+    
         // Menghitung jumlah gambar yang ada setelah penghapusan
         $existingImagesCount = $story->content_images()->count();
-
+    
         // Menghapus gambar yang dipilih berdasarkan ID
         if ($request->has('delete_images')) {
             foreach ($request->input('delete_images') as $imageId) {
@@ -154,34 +159,35 @@ class StoryController extends Controller
                 }
             }
         }
-
+    
         // Validasi jumlah gambar setelah penghapusan
         $newImagesCount = $request->has('content_images') ? count($request->file('content_images')) : 0;
         if ($existingImagesCount + $newImagesCount > 5) {
             return response()->json(['message' => 'Jumlah gambar tidak boleh lebih dari 5.'], 400);
         }
-
+    
         // Memperbarui cerita
         $story->update($request->only(['category_id', 'title', 'content']));
-
+    
         // Menyimpan gambar baru jika ada    
         if ($request->hasFile('content_images')) {
             foreach ($request->file('content_images') as $image) {
                 // Mengambil nama asli file  
                 $originalName = $image->getClientOriginalName();
-
+    
                 // Menyimpan gambar dengan nama asli di folder 'images'  
                 $path = $image->storeAs('content_images', $originalName, 'public');
-
+    
                 $story->content_images()->create(['path' => $path]);
             }
         }
-
+    
         return response()->json([
             'message' => 'Cerita berhasil diperbarui.',
             'data' => $story->load('content_images')
         ], 200);
     }
+    
 
 
     // Menghapus cerita  
@@ -202,27 +208,27 @@ class StoryController extends Controller
         ], 204);
     }
 
-    public function deleteImages(Request $request)
-    {
-        // Validasi input untuk memastikan bahwa 'image_ids' adalah array dan tidak kosong
-        $request->validate([
-            'image_ids' => 'required|array',
-            'image_ids.*' => 'exists:content_images,id', // Pastikan setiap ID ada di tabel content_images
-        ]);
+    // public function deleteImages(Request $request)
+    // {
+    //     // Validasi input untuk memastikan bahwa 'image_ids' adalah array dan tidak kosong
+    //     $request->validate([
+    //         'image_ids' => 'required|array',
+    //         'image_ids.*' => 'exists:content_images,id', // Pastikan setiap ID ada di tabel content_images
+    //     ]);
 
-        // Menghapus gambar berdasarkan ID yang diberikan
-        foreach ($request->input('image_ids') as $imageId) {
-            $contentImage = ContentImage::findOrFail($imageId);
+    //     // Menghapus gambar berdasarkan ID yang diberikan
+    //     foreach ($request->input('image_ids') as $imageId) {
+    //         $contentImage = ContentImage::findOrFail($imageId);
 
-            // Hapus file dari storage
-            Storage::disk('public')->delete($contentImage->path);
-            $contentImage->delete();
-        }
+    //         // Hapus file dari storage
+    //         Storage::disk('public')->delete($contentImage->path);
+    //         $contentImage->delete();
+    //     }
 
-        return response()->json([
-            'message' => 'Gambar berhasil dihapus.'
-        ], 204);
-    }
+    //     return response()->json([
+    //         'message' => 'Gambar berhasil dihapus.'
+    //     ], 204);
+    // }
 
 
     // Menampilkan cerita berdasarkan kategori ID

@@ -48,8 +48,6 @@ class BookmarkController extends Controller
         $bookmark = Bookmark::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
         $bookmark->delete();
 
-        return response()->json([
-            'message' => 'Bookmark berhasil dihapus.'
-        ], 204);
+        return response()->json([], 204);
     }
 }
